@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import Card from '../../components/Card.jsx';
 import Table from '../../components/Table.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import ProductDetail from './ProductDetail';
+import ProductCreate from './ProductCreate';
 
-const ProductsPage = ({ data }) => {
+const ProductsPage = ({ data, onAddProduct }) => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [viewProduct, setViewProduct] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [products, setProducts] = useState(data.products);
 
   const filtered = data.products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
@@ -28,7 +30,7 @@ const ProductsPage = ({ data }) => {
 
   const handleView = (row) => {
     setViewProduct(row);
-    setIsModalOpen(true);
+    setIsViewModalOpen(true);
   };
 
   const handleEdit = (row) => {
@@ -42,13 +44,17 @@ const ProductsPage = ({ data }) => {
     }
   };
 
+  const handleProductCreated = (newProduct) => {
+    // Call the function passed from App.jsx to update the global state
+    if (onAddProduct) onAddProduct(newProduct);
+    setIsCreateModalOpen(false);
+  };
+
   return (
     <Card
       title="Products"
       actions={
-        <Link to="/products/create">
-          <Button icon={<Plus size={20} />}>Add Product</Button>
-        </Link>
+        <Button icon={<Plus size={20} />} onClick={() => setIsCreateModalOpen(true)}>Add Product</Button>
       }
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -78,8 +84,12 @@ const ProductsPage = ({ data }) => {
         />
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={`Product Details: ${viewProduct?.name || ''}`}>
+      <Modal isOpen={isViewModalOpen} onClose={() => setIsViewModalOpen(false)} title={`Product Details: ${viewProduct?.name || ''}`}>
         {viewProduct ? <ProductDetail product={viewProduct} /> : <p>Loading...</p>}
+      </Modal>
+
+      <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Create New Product">
+        <ProductCreate onProductCreated={handleProductCreated} onCancel={() => setIsCreateModalOpen(false)} />
       </Modal>
     </Card>
   );

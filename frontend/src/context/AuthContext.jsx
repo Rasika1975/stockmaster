@@ -1,12 +1,17 @@
 import React, { useState, createContext, useContext } from 'react';
 
 const AuthContext = createContext();
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState({ name: 'Demo User', role: 'Manager', email: 'demo@ims.com' });
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
 
-  const login = (userData) => {
-    setUser(userData);
+export const AuthProvider = ({ children }) => {
+  // Default to unauthenticated state
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const login = (email, password) => {
+    // In a real app, you'd validate credentials against a backend API.
+    // For this demo, we'll accept any login and set a mock user.
+    const mockUser = { name: 'Demo User', role: 'Manager', email: email };
+    setUser(mockUser);
     setIsAuthenticated(true);
   };
   const logout = () => {

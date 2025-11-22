@@ -1,37 +1,87 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Card from '../../components/Card.jsx';
-import Input from '../../components/Input.jsx';
-import Select from '../../components/Select.jsx';
-import Button from '../../components/Button.jsx';
-import { dummyData } from '../../data/dummyData.js';
+import { useState } from "react";
+import Input from "../../components/Input.jsx";
+import Select from "../../components/Select.jsx";
+import Button from "../../components/Button.jsx";
+import { dummyData } from "../../data/dummyData.js";
 
-const ProductCreate = () => {
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', sku: '', category: '', unit: '', reorderLevel: 0, initialStock: 0 });
+const ProductCreate = ({ onProductCreated, onCancel }) => {
+  const [form, setForm] = useState({
+    name: "",
+    sku: "",
+    category: "",
+    unit: "",
+    reorderLevel: 0,
+    initialStock: 0,
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // In real app: call API to create product. Here we just alert and navigate back.
-    alert('Product created (demo). Connect to API to persist.');
-    navigate('/products');
+    const newProduct = {
+      id: Date.now(),
+      ...form,
+      stock: Number(form.initialStock), // Set initial stock from the form
+      reorderLevel: Number(form.reorderLevel),
+      locations: {}, // Initialize with empty locations
+    };
+
+    if (onProductCreated) {
+      onProductCreated(newProduct);
+    }
   };
 
   return (
-    <Card title="Create Product">
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input label="Product Name" value={form.name} onChange={e=>setForm({...form, name:e.target.value})} required />
-        <Input label="SKU / Code" value={form.sku} onChange={e=>setForm({...form, sku:e.target.value})} required />
-        <Select label="Category" options={[{label:'Select', value:''}, ...dummyData.categories.map(c=>({label:c.name, value:c.name}))]} value={form.category} onChange={e=>setForm({...form, category:e.target.value})} />
-        <Input label="Unit of Measure" value={form.unit} onChange={e=>setForm({...form, unit:e.target.value})} />
-        <Input label="Reorder Level" type="number" value={form.reorderLevel} onChange={e=>setForm({...form, reorderLevel: Number(e.target.value)})} />
-        <Input label="Initial Stock (optional)" type="number" value={form.initialStock} onChange={e=>setForm({...form, initialStock: Number(e.target.value)})} />
-        <div className="md:col-span-2 flex gap-3 justify-end">
-          <Button variant="outline" onClick={()=>navigate('/products')}>Cancel</Button>
-          <Button type="submit">Create</Button>
-        </div>
-      </form>
-    </Card>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        label="Product Name"
+        name="name"
+        value={form.name}
+        onChange={handleChange}
+        required
+      />
+      <Input
+        label="SKU / Code"
+        name="sku"
+        value={form.sku}
+        onChange={handleChange}
+        required
+      />
+      <Select
+        label="Category"
+        name="category"
+        options={[{ label: 'Select Category', value: '' }, ...dummyData.categories.map(c => ({ label: c.name, value: c.name }))]}
+        value={form.category}
+        onChange={handleChange}
+      />
+      <Input
+        label="Unit of Measure"
+        name="unit"
+        value={form.unit}
+        onChange={handleChange}
+        placeholder="e.g., pcs, kg, box"
+      />
+      <Input
+        label="Initial Stock"
+        name="initialStock"
+        type="number"
+        value={form.initialStock}
+        onChange={handleChange}
+      />
+      <Input
+        label="Reorder Level"
+        name="reorderLevel"
+        type="number"
+        value={form.reorderLevel}
+        onChange={handleChange}
+      />
+      <div className="flex justify-end gap-3 mt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button type="submit">Create Product</Button>
+      </div>
+    </form>
   );
 };
 
