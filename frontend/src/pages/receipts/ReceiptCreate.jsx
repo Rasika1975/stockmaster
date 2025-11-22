@@ -5,6 +5,7 @@ import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
 import Select from '../../components/Select.jsx';
 import Button from '../../components/Button.jsx';
+import { receiptsAPI } from '../../services/api';
 
 const ReceiptCreate = ({ data, onAddReceipt }) => {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ const ReceiptCreate = ({ data, onAddReceipt }) => {
   const [warehouse, setWarehouse] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [items, setItems] = useState([{ productId: '', quantity: 1 }]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
@@ -29,34 +32,44 @@ const ReceiptCreate = ({ data, onAddReceipt }) => {
     setItems(newItems);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!supplier || !warehouse || items.some(item => !item.productId || item.quantity <= 0)) {
-      alert('Please fill in all fields and ensure item quantities are positive.');
+      setError('Please fill in all fields and ensure item quantities are positive.');
       return;
     }
 
-    const newReceipt = {
-      id: Date.now(),
-      receiptNo: `REC-${String(Date.now()).slice(-5)}`,
-      supplier,
-      warehouse,
-      date,
-      status: 'Pending', // Receipts start as Pending
-      items: items.map(item => {
-        const product = data.products.find(p => p.id === parseInt(item.productId));
-        return {
-          product: product?.name || 'Unknown Product',
-          quantity: Number(item.quantity),
-          received: 0,
-        };
-      }),
-    };
+    setLoading(true);
+    setError("");
 
-    if (onAddReceipt) {
-      onAddReceipt(newReceipt);
+    try {
+      const receiptData = {
+        receiptNo: `REC-${String(Date.now()).slice(-5)}`,
+        supplier,
+        warehouse,
+        date,
+        status: 'Pending', // Receipts start as Pending
+        items: items.map(item => {
+          const product = data.products.find(p => p.id === parseInt(item.productId));
+          return {
+            product: product?.name || 'Unknown Product',
+            quantity: Number(item.quantity),
+            received: 0,
+          };
+        }),
+      };
+
+      const newReceipt = await receiptsAPI.create(receiptData);
+
+      if (onAddReceipt) {
+        onAddReceipt(newReceipt);
+      }
+      navigate('/receipts');
+    } catch (err) {
+      setError(err.message || "Failed to create receipt");
+    } finally {
+      setLoading(false);
     }
-    navigate('/receipts');
   };
 
   const productOptions = [{ label: 'Select a product', value: '' }, ...data.products.map(p => ({ label: `${p.name} (SKU: ${p.sku})`, value: p.id }))];
@@ -65,6 +78,11 @@ const ReceiptCreate = ({ data, onAddReceipt }) => {
   return (
     <Card title="Create New Receipt">
       <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input label="Supplier" name="supplier" value={supplier} onChange={e => setSupplier(e.target.value)} required />
           <Select label="Warehouse" name="warehouse" options={warehouseOptions} value={warehouse} onChange={e => setWarehouse(e.target.value)} />
@@ -93,7 +111,9 @@ const ReceiptCreate = ({ data, onAddReceipt }) => {
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button type="button" variant="secondary" onClick={() => navigate('/receipts')}>Cancel</Button>
-          <Button type="submit">Save Receipt</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Saving..." : "Save Receipt"}
+          </Button>
         </div>
       </form>
     </Card>

@@ -1,16 +1,82 @@
-# React + Vite
+# StockMaster Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend application for the StockMaster inventory management system, built with React and Vite.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- User authentication (login/logout)
+- Product management (create, view, update, delete)
+- Receipt management (create, validate, delete)
+- Dashboard with key metrics
+- Responsive design for all device sizes
 
-## React Compiler
+## Technologies Used
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 18
+- Vite
+- React Router v6
+- Tailwind CSS
+- Lucide React Icons
 
-## Expanding the ESLint configuration
+## API Integration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The frontend is connected to a Node.js backend API running on `http://localhost:5000`.
+
+### Services
+
+All API calls are handled through the service layer in `src/services/api.js`:
+
+- Authentication API (`authAPI`)
+- Products API (`productsAPI`)
+- Warehouses API (`warehousesAPI`)
+- Categories API (`categoriesAPI`)
+- Receipts API (`receiptsAPI`)
+- Deliveries API (`deliveriesAPI`)
+- Transfers API (`transfersAPI`)
+- Adjustments API (`adjustmentsAPI`)
+- Ledger API (`ledgerAPI`)
+
+### Authentication
+
+- JWT token-based authentication
+- Token stored in localStorage
+- Protected routes for authenticated users only
+
+## Getting Started
+
+1. Install dependencies:
+   ```
+   npm install
+   ```
+
+2. Start the development server:
+   ```
+   npm run dev
+   ```
+
+3. Build for production:
+   ```
+   npm run build
+   ```
+
+## Project Structure
+
+```
+src/
+├── components/     # Reusable UI components
+├── context/        # React context providers
+├── data/           # Static data and dummy data
+├── pages/          # Page components
+├── services/       # API service layer
+├── utils/          # Utility functions
+├── App.jsx         # Main application component
+└── main.jsx        # Application entry point
+```
+
+## Environment Variables
+
+The application expects the backend API to be running on `http://localhost:5000`.
+
+## License
+
+This project is licensed under the MIT License.

@@ -3,6 +3,7 @@ import Input from "../../components/Input.jsx";
 import Select from "../../components/Select.jsx";
 import Button from "../../components/Button.jsx";
 import { dummyData } from "../../data/dummyData.js";
+import { productsAPI } from "../../services/api";
 
 const ProductCreate = ({ onProductCreated, onCancel }) => {
   const [form, setForm] = useState({
@@ -13,29 +14,47 @@ const ProductCreate = ({ onProductCreated, onCancel }) => {
     reorderLevel: 0,
     initialStock: 0,
   });
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newProduct = {
-      id: Date.now(),
-      ...form,
-      stock: Number(form.initialStock), // Set initial stock from the form
-      reorderLevel: Number(form.reorderLevel),
-      locations: {}, // Initialize with empty locations
-    };
-
-    if (onProductCreated) {
-      onProductCreated(newProduct);
-      if (onCancel) onCancel(); // This ensures the modal closes after creation
+    setLoading(true);
+    setError("");
+    
+    try {
+      const productData = {
+        ...form,
+        stock: Number(form.initialStock),
+        reorderLevel: Number(form.reorderLevel),
+        locations: {},
+      };
+      
+      const newProduct = await productsAPI.create(productData);
+      
+      if (onProductCreated) {
+        onProductCreated(newProduct);
+        if (onCancel) onCancel(); // This ensures the modal closes after creation
+      }
+    } catch (err) {
+      setError(err.message || "Failed to create product");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
       <Input
         label="Product Name"
         name="name"
@@ -80,7 +99,9 @@ const ProductCreate = ({ onProductCreated, onCancel }) => {
       />
       <div className="flex justify-end gap-3 mt-4">
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">Create Product</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Creating..." : "Create Product"}
+        </Button>
       </div>
     </form>
   );

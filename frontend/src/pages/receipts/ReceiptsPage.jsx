@@ -17,6 +17,7 @@ import {
   XCircle,
   Package
 } from "lucide-react";
+import { receiptsAPI } from "../../services/api";
 
 const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
   const [search, setSearch] = useState("");
@@ -25,6 +26,8 @@ const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
   const [viewModal, setViewModal] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // -----------------------------
   // FILTER + SEARCH LOGIC
@@ -59,14 +62,36 @@ const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
     setDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    if (onDeleteReceipt) onDeleteReceipt(selectedReceipt.id);
-    setDeleteModal(false);
-    setSelectedReceipt(null);
+  const confirmDelete = async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      await receiptsAPI.delete(selectedReceipt.id);
+      
+      if (onDeleteReceipt) onDeleteReceipt(selectedReceipt.id);
+      setDeleteModal(false);
+      setSelectedReceipt(null);
+    } catch (err) {
+      setError(err.message || "Failed to delete receipt");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleValidate = (receipt) => {
-    if (onValidateReceipt) onValidateReceipt(receipt);
+  const handleValidate = async (receipt) => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      const updatedReceipt = await receiptsAPI.update(receipt.id, { ...receipt, status: "Received" });
+      
+      if (onValidateReceipt) onValidateReceipt(updatedReceipt);
+    } catch (err) {
+      setError(err.message || "Failed to validate receipt");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleExport = () => {
@@ -174,8 +199,9 @@ const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
               onClick={() => handleValidate(r)}
               className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition"
               title="Validate Receipt"
+              disabled={loading}
             >
-              Validate
+              {loading ? "Validating..." : "Validate"}
             </button>
           )}
           <button
@@ -192,6 +218,13 @@ const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
 
   return (
     <div className="space-y-6">
+      {/* ERROR MESSAGE */}
+      {error && (
+        <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+          {error}
+        </div>
+      )}
+      
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -417,8 +450,9 @@ const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
                       setViewModal(false);
                     }}
                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    disabled={loading}
                   >
-                    Validate Receipt
+                    {loading ? "Validating..." : "Validate Receipt"}
                   </Button>
                 )}
               </div>
@@ -450,8 +484,9 @@ const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
                 <Button
                   onClick={confirmDelete}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={loading}
                 >
-                  Delete
+                  {loading ? "Deleting..." : "Delete"}
                 </Button>
               </div>
             </div>

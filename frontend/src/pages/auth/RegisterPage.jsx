@@ -3,13 +3,15 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../../components/Button.jsx";
 
-const Login = () => {
-  const { login } = useAuth();
+const Register = () => {
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
+    username: "",
     email: "",
     password: "",
+    confirmPassword: ""
   });
   
   const [error, setError] = useState("");
@@ -24,11 +26,24 @@ const Login = () => {
     setLoading(true);
     setError("");
 
+    // Validation
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
     try {
-      await login(form.email, form.password);
-      navigate("/dashboard"); // redirect after login
+      await register(form.username, form.email, form.password);
+      navigate("/login"); // redirect to login after registration
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      setError(err.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
@@ -39,7 +54,7 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800">StockMaster</h1>
-          <p className="text-gray-500">Sign in to your account</p>
+          <p className="text-gray-500">Create a new account</p>
         </div>
         <div className="bg-white p-8 rounded-xl shadow-md">
           {error && (
@@ -48,6 +63,19 @@ const Login = () => {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input
+                type="text"
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your username"
+                required
+              />
+            </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
@@ -73,14 +101,28 @@ const Login = () => {
                 required
               />
             </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <input
+                type="password"
+                name="confirmPassword"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+            
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Creating Account..." : "Register"}
             </Button>
             
-            <div className="text-center text-sm text-gray-600 mt-4">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-blue-600 hover:text-blue-800 font-medium">
-                Register
+            <div className="text-center text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link to="/login" className="text-blue-600 hover:text-blue-800 font-medium">
+                Sign in
               </Link>
             </div>
           </form>
@@ -90,4 +132,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
