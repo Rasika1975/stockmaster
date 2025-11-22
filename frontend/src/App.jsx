@@ -51,6 +51,40 @@ const App = () => {
     alert(`Receipt "${newReceipt.receiptNo}" has been successfully created!`);
   };
 
+  const handleDeleteReceipt = (receiptId) => {
+    setAppData(prevData => ({
+      ...prevData,
+      receipts: prevData.receipts.filter(r => r.id !== receiptId)
+    }));
+  };
+
+  const handleValidateReceipt = (validatedReceipt) => {
+    setAppData(prevData => {
+      const updatedReceipts = prevData.receipts.map(r =>
+        r.id === validatedReceipt.id ? { ...r, status: "Received" } : r
+      );
+
+      const productsToUpdate = new Map(prevData.products.map(p => [p.name, { ...p }]));
+      const newLedgerEntries = [];
+
+      validatedReceipt.items.forEach(item => {
+        if (productsToUpdate.has(item.product)) {
+          const product = productsToUpdate.get(item.product);
+          product.stock += item.quantity;
+          newLedgerEntries.push({ id: Date.now() + Math.random(), date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), product: item.product, quantity: item.quantity, type: 'Receipt', from: validatedReceipt.supplier, to: validatedReceipt.warehouse, reference: validatedReceipt.receiptNo, performedBy: 'Admin' });
+        }
+      });
+
+      return {
+        ...prevData,
+        receipts: updatedReceipts,
+        products: Array.from(productsToUpdate.values()),
+        ledger: [...prevData.ledger, ...newLedgerEntries],
+      };
+    });
+    alert(`Receipt "${validatedReceipt.receiptNo}" has been validated and stock levels updated!`);
+  };
+
   return (
     <BrowserRouter>
       <Routes>
@@ -60,11 +94,10 @@ const App = () => {
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><DashboardPage data={appData} /></AppLayout></ProtectedRoute>} />
         <Route path="/products" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ProductsPage data={appData} onAddProduct={handleAddProduct} /></AppLayout></ProtectedRoute>} />
-        <Route path="/products/create" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ProductCreate onProductCreated={handleAddProduct} /></AppLayout></ProtectedRoute>} />
         <Route path="/products/create" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ProductCreate onProductCreated={handleAddProduct} data={appData} /></AppLayout></ProtectedRoute>} />
         <Route path="/receipts/create" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ReceiptCreate onAddReceipt={handleAddReceipt} data={appData} /></AppLayout></ProtectedRoute>} />
         <Route path="/products/:id" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ProductDetail /></AppLayout></ProtectedRoute>} />
-        <Route path="/receipts" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ReceiptsPage data={appData} /></AppLayout></ProtectedRoute>} />
+        <Route path="/receipts" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><ReceiptsPage data={appData} onDeleteReceipt={handleDeleteReceipt} onValidateReceipt={handleValidateReceipt} /></AppLayout></ProtectedRoute>} />
         <Route path="/deliveries" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><DeliveriesPage data={appData} /></AppLayout></ProtectedRoute>} />
         <Route path="/transfers" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><TransfersPage data={appData} /></AppLayout></ProtectedRoute>} />
         <Route path="/adjustments" element={<ProtectedRoute><AppLayout isOpen={isOpen} setIsOpen={setIsOpen}><AdjustmentsPage data={appData} /></AppLayout></ProtectedRoute>} />

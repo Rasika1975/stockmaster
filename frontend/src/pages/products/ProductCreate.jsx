@@ -30,6 +30,7 @@ const ProductCreate = ({ onProductCreated, onCancel }) => {
 
     if (onProductCreated) {
       onProductCreated(newProduct);
+      if (onCancel) onCancel(); // This ensures the modal closes after creation
     }
   };
 

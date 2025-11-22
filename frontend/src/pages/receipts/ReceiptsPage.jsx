@@ -18,19 +18,18 @@ import {
   Package
 } from "lucide-react";
 
-const ReceiptsPage = ({ data }) => {
+const ReceiptsPage = ({ data, onDeleteReceipt, onValidateReceipt }) => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [warehouseFilter, setWarehouseFilter] = useState("all");
   const [viewModal, setViewModal] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [receipts, setReceipts] = useState(data.receipts);
 
   // -----------------------------
   // FILTER + SEARCH LOGIC
   // -----------------------------
-  const filtered = receipts.filter((r) => {
+  const filtered = data.receipts.filter((r) => {
     const matchSearch =
       r.receiptNo.toLowerCase().includes(search.toLowerCase()) ||
       r.supplier.toLowerCase().includes(search.toLowerCase());
@@ -61,16 +60,13 @@ const ReceiptsPage = ({ data }) => {
   };
 
   const confirmDelete = () => {
-    setReceipts(receipts.filter(r => r.id !== selectedReceipt.id));
+    if (onDeleteReceipt) onDeleteReceipt(selectedReceipt.id);
     setDeleteModal(false);
     setSelectedReceipt(null);
   };
 
   const handleValidate = (receipt) => {
-    // Update receipt status to "Received"
-    setReceipts(receipts.map(r => 
-      r.id === receipt.id ? { ...r, status: "Received" } : r
-    ));
+    if (onValidateReceipt) onValidateReceipt(receipt);
   };
 
   const handleExport = () => {
@@ -92,10 +88,10 @@ const ReceiptsPage = ({ data }) => {
   // STATISTICS
   // -----------------------------
   const stats = {
-    total: receipts.length,
-    received: receipts.filter(r => r.status === "Received").length,
-    pending: receipts.filter(r => r.status === "Pending").length,
-    cancelled: receipts.filter(r => r.status === "Cancelled").length
+    total: data.receipts.length,
+    received: data.receipts.filter(r => r.status === "Received").length,
+    pending: data.receipts.filter(r => r.status === "Pending").length,
+    cancelled: data.receipts.filter(r => r.status === "Cancelled").length
   };
 
   // -----------------------------
@@ -347,7 +343,7 @@ const ReceiptsPage = ({ data }) => {
         <div className="mb-4 flex justify-between items-center">
           <h3 className="font-semibold text-gray-800">Receipt List</h3>
           <span className="text-sm text-gray-600">
-            Showing {filtered.length} of {receipts.length} receipts
+            Showing {filtered.length} of {data.receipts.length} receipts
           </span>
         </div>
         <Table columns={columns} data={filtered} />
